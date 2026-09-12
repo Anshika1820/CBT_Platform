@@ -1,0 +1,480 @@
+Computer Based Practice Platform:
+=================================
+# Work Flow of the website:
+                    ┌─────────────────┐
+                    │     Landing Page    │
+                    │                     │
+                    │  	  Student Name   │
+                    │  		Exam Name     │
+                    │                      │
+                    │     START EXAM       │
+                    └───────┬─────────┘
+                               │
+                               ▼
+                    ┌─────────────────┐
+                    │     Exam Session     │
+                    │                      │
+                    │ Name | Exam | Timer  │
+                    │                      │
+                    │ Q1 Q2 Q3 Q4 ...      │
+                    │                      │
+                    │ Question + Options   │
+                    │                      │
+                    │ Prev       Next      │
+                    └────────┬────────┘
+                               
+             	      ┌───────┴──────┐
+            	      │                  │
+           	   Time expires         Submit
+               	      │                  │
+              	      └───────┬──────┘
+                               	▼
+                    ┌─────────────────┐
+                    │    Result Engine     │
+                    │                      │
+                    │ Correct              │
+                    │ Wrong                │
+                    │ Non-attempted        │
+                    │ Negative marks       │
+                    │ Tab deductions       │
+                    │ Final score          │
+                    └─────────────────┘
+                               │
+                               ▼
+                    ┌─────────────────┐
+                    │     Result Page      │
+                    │                      │
+                    │ Score / 300          │
+                    │ +4 marks             │
+                    │ -1 marks             │
+                    │ Tab deductions       │
+                    │ Wrong questions      │
+                    │ Correct answers      │
+                    └─────────────────┘
+
+# Backend Structure:
+com.cbtplatform
+│
+├── controller
+│   ├── ExamController
+│   ├── QuestionController
+│   ├── SubmissionController
+│   └── ViolationController
+│
+├── service
+│   ├── ExamService
+│   ├── QuestionService
+│   ├── EvaluationService
+│   └── ViolationService
+│
+├── entity
+│   ├── ExamSession
+│   ├── Question
+│   ├── Option
+│   ├── Answer
+│   └── TabViolation
+│
+├── repository
+│   ├── ExamSessionRepository
+│   ├── QuestionRepository
+│   ├── AnswerRepository
+│   └── TabViolationRepository
+│
+├── dto
+│   ├── StartExamRequest
+│   ├── SubmitExamRequest
+│   ├── AnswerRequest
+│   └── ResultResponse
+│
+└── config
+    └── ...
+
+# Database Design:
+- exam-sessions:
+id
+student_name
+exam_name
+started_at
+submitted_at
+status
+total_score
+correct_marks
+negative_marks
+tab_switch_deduction
+final_score
+
+- questions:
+id
+question_text
+option_a
+option_b
+option_c
+option_d
+correct_option
+
+- answers:
+id
+exam_session_id
+question_id
+selected_option
+
+- tab_violations:
+id
+exam_session_id
+violation_type
+occurred_at
+deduction
+
+# Task 1: Spring Boot Backend Setup & MySQL Configuration
+- Objective:
+The objective of this task was to create the initial backend structure for the Computer Based Test (CBT) Practice Platform using Java 21 and Spring Boot, and establish a connection between the Spring Boot application and MySQL.
+At this stage, no business logic or exam functionality was implemented. The purpose was to establish the foundation on which the complete exam system will be developed.
+
+- Technology Used:
+Java 21
+Spring Boot
+Maven
+Spring Web
+Spring Data JPA
+Hibernate
+MySQL
+MySQL Driver
+Spring Boot DevTools
+Validation
+
+- Project Structure:
+The initial backend structure is:
+cbt-backend
+│
+├── src
+│   ├── main
+│   │   ├── java
+│   │   │   └── com.cbtplatform.cbt
+│   │   │       └── CbtBackendApplication.java
+│   │   │
+│   │   └── resources
+│   │       └── application.properties
+│   │
+│   └── test
+│
+├── pom.xml
+└── ...
+
+- Main Application Class:
+The application starts from: CbtBackendApplication
+It contains the main() method: SpringApplication.run(CbtBackendApplication.class, args);
+The @SpringBootApplication annotation tells Spring Boot that this is the main configuration and entry point of the application.
+When the application starts, Spring Boot:
+Start Java application
+        ↓
+Initialize Spring container
+        ↓
+Configure application
+        ↓
+Start embedded Tomcat server
+        ↓
+Application available on port 8080
+
+- Why Spring Boot?
+Spring Boot was selected because it provides the infrastructure required for developing a REST-based backend without manually configuring every component.
+It will allow us to build:
+REST APIs
+Database operations
+Business logic
+Validation
+Exception handling
+Dependency injection
+Exam evaluation services
+The backend will act as the central authority of the CBT system.
+
+- MySQL Database:
+A database named: cbt_platform was created.
+SQL used:
+CREATE DATABASE cbt_platform;
+The tables are not being manually created.
+We will define Java entities and allow JPA/Hibernate to manage the database schema.
+
+- Database Connection:
+The Spring Boot application connects to MySQL using:
+JDBC
+  ↓
+MySQL Driver
+  ↓
+Spring Data JPA
+  ↓
+Hibernate
+  ↓
+MySQL Database
+The connection configuration is stored in: application.properties
+Important properties include:
+spring.datasource.url
+spring.datasource.username
+spring.datasource.password
+Hibernate is configured with: spring.jpa.hibernate.ddl-auto=update
+
+- Port:
+The backend runs on: http://localhost:8080
+Port 8080 is the default port configured for the Spring Boot web server, although it can be changed through: server.port
+
+- Why We Are Not Creating Tables Manually:
+Instead of manually creating tables using SQL, we'll use:
+Java Entity
+      ↓
+JPA
+      ↓
+Hibernate
+      ↓
+MySQL Table
+For example, later when we create:
+@Entity
+class ExamSession
+Hibernate will map that Java class to a database table.
+This allows the application's object model and database model to remain connected.
+
+- Role of the Backend:
+The backend will eventually be responsible for:
+Starting exam sessions
+        ↓
+Providing questions
+        ↓
+Receiving answers
+        ↓
+Recording tab violations
+        ↓
+Validating exam timing
+        ↓
+Submitting examination
+        ↓
+Evaluating answers
+        ↓
+Calculating marks
+        ↓
+Calculating negative marking
+        ↓
+Calculating tab-switch deductions
+        ↓
+Generating result
+        ↓
+Saving result in MySQL
+
+- Important Architecture Decision:
+The final score will not be trusted from React.
+React will send the student's answers to Spring Boot.
+The backend will calculate:
+Correct answers × 4 - Wrong answers × 1 - Tab switches × 1 = Final Score
+This is important because the browser is controlled by the user and therefore cannot be considered a trusted source for examination results.
+
+- Tab-Switch Detection — Initial Design:
+A browser-based application cannot depend on Spring Boot alone to know that a student switched tabs.
+The planned architecture is:
+Student switches tab
+        ↓
+React detects visibility change
+        ↓
+React sends violation API request
+        ↓
+Spring Boot receives request
+        ↓
+Violation stored in MySQL
+        ↓
+Backend applies deduction
+
+- Current Status:
+[x] Spring Boot project created
+[x] Maven configured
+[x] Java 21 configured
+[x] Required dependencies added
+[x] MySQL database created
+[x] Spring Boot → MySQL configuration completed
+[x] Backend successfully started
+[ ] Entities
+[ ] Repositories
+[ ] Services
+[ ] Controllers
+[ ] Exam APIs
+[ ] React frontend
+[ ] Exam timer
+[ ] Tab detection
+[ ] Evaluation engine
+[ ] Result system
+
+# Task 2: Database Entity Design
+- Objective:
+The objective of this task was to design the core database model for the CBT platform and map the required database tables to Java classes using JPA/Hibernate.
+The system requires persistent storage for questions, individual exam attempts, student answers and tab-switch violations.
+
+- Core Entities Created:
+The following entities were created:
+Question
+ExamSession
+Answer
+TabViolation
+An enum was also created:
+ExamStatus
+1. Question Entity
+Question represents a question available in the examination.
+It contains:
+id
+questionText
+optionA
+optionB
+optionC
+optionD
+correctOption
+The @Entity annotation allows Hibernate to map the Java class to the questions database table.
+The primary key is generated automatically using:
+@GeneratedValue(strategy = GenerationType.IDENTITY)
+The question text is stored as TEXT because examination questions can potentially be longer than a normal VARCHAR field.
+2. ExamSession Entity
+ExamSession represents one student's individual attempt at an examination.
+It stores:
+id
+studentName
+examName
+startedAt
+submittedAt
+status
+correctMarks
+negativeMarks
+tabSwitchDeduction
+finalScore
+An exam session is important because the same student can take multiple exams or multiple attempts.
+3. ExamStatus Enum
+The exam status is represented using an enum:
+IN_PROGRESS
+SUBMITTED
+AUTO_SUBMITTED
+Using an enum prevents invalid arbitrary status values from being stored.
+The lifecycle is:
+IN_PROGRESS
+      ↓
+SUBMITTED
+or:
+IN_PROGRESS
+      ↓
+AUTO_SUBMITTED
+AUTO_SUBMITTED is used when the 90-minute timer expires.
+4. Answer Entity
+Answer stores the option selected by the student for a particular question.
+It contains:
+id
+examSession
+question
+selectedOption
+It has two @ManyToOne relationships:
+Many Answers → One ExamSession
+Many Answers → One Question
+5. TabViolation Entity
+TabViolation records every detected tab-switch event.
+It contains:
+id
+examSession
+occurredAt
+deduction
+Each violation is stored separately.
+For example:
+Violation 1 → 11:15 → -1
+Violation 2 → 11:23 → -1
+Violation 3 → 11:41 → -1
+Therefore:
+Total tab-switch deduction = -3
+
+- Database Relationship
+The current database design is:
+                 ExamSession
+                     │
+          ┌──────────┴──────────┐
+          │                     │
+          ▼                     ▼
+       Answer             TabViolation
+          │
+          ▼
+       Question
+More specifically:
+ExamSession 1 ──── * Answer
+Question    1 ──── * Answer
+ExamSession 1 ──── * TabViolation
+1 : * means one-to-many.
+
+- Why relational design?
+A relational database was chosen because the application contains naturally related structured data.
+For example:
+One exam session
+       ↓
+Many answers
+       ↓
+Each answer
+       ↓
+References one question
+Using separate tables prevents unnecessary duplication of question information and makes the data easier to query and maintain.
+
+- Important Design Decision
+The final score is stored with the exam session, but it will not be directly accepted from the frontend.
+The backend will calculate it from:
+Correct answers
+Negative marking
+Tab-switch deductions
+This prevents the client-side application from being the authority for examination results.
+
+- Task2 checklist:
+[ ] Create entity package
+[ ] Create Question.java
+[ ] Create ExamSession.java
+[ ] Create ExamStatus.java
+[ ] Create Answer.java
+[ ] Create TabViolation.java
+[ ] Generate getters/setters
+[ ] Keep no-argument constructors
+[ ] Run Spring Boot
+[ ] Check Hibernate logs
+[ ] Verify tables in MySQL
+
+# Task 3: Repository Layer and Database Operations
+
+- Objective:
+The objective of this task was to create the repository/data-access layer using Spring Data JPA and verify that the Spring Boot application can persist Java objects into the MySQL database.
+
+- Repository Layer:
+Repositories were created for the main entities:
+QuestionRepository
+ExamSessionRepository
+AnswerRepository
+TabViolationRepository
+
+Each repository extends: JpaRepository<Entity, ID>
+For example:
+public interface QuestionRepository
+        extends JpaRepository<Question, Long> {
+}
+
+- Why use JpaRepository?
+JpaRepository provides commonly required database operations without requiring us to implement them manually.
+Some of the provided operations are:
+save()
+findById()
+findAll()
+deleteById()
+count()
+existsById()
+This reduces boilerplate database-access code.
+
+- Generic Parameters
+In: JpaRepository<Question, Long>
+Question represents the entity managed by the repository.
+Long represents the datatype of the entity's primary key.
+Since:
+private Long id;
+is the primary key of Question, the repository uses: JpaRepository<Question, Long>
+
+- Dependency Injection
+QuestionRepository was injected into DataInitializer.
+Example:
+private final QuestionRepository questionRepository;
+public DataInitializer(QuestionRepository questionRepository) {
+    this.questionRepository = questionRepository;
+}
+Spring automatically creates and provides the repository object.
+
+This is an example of Dependency Injection.
+
+Instead of manually creating:
